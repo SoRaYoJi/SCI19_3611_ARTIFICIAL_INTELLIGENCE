@@ -1,8 +1,8 @@
 # Complete this class for all parts of the project
 
-from pacman_module.game import Agent
 import numpy as np
 from pacman_module import util
+from pacman_module.game import Agent
 from scipy.stats import binom
 
 
@@ -33,8 +33,8 @@ class BeliefStateAgent(Agent):
         self.ghost_type = self.args.ghostagent
         self.sensor_variance = self.args.sensorvariance
 
-        # Sensor noise parameters: Binomial(n, p) centered -> variance = n p (1-p).
-        # We use p = 0.5 as in the evidence generator below.
+        # Sensor noise parameters: Binomial(n, p) centered.
+        # Variance = n p (1 - p); use p = 0.5 as in the evidence generator.
         self.p = 0.5
         # Guard against division by zero and ensure integer n >= 1
         n_float = max(self.sensor_variance / (self.p * (1 - self.p)), 1.0)
@@ -44,11 +44,12 @@ class BeliefStateAgent(Agent):
         # If provided on the CLI as --ghostparam, use it; otherwise default.
         self.bias_strength = float(getattr(self.args, "ghostparam", 0.75))
 
-        # Per-ghost-type scaling of the single parameter (keeps one free parameter overall)
+        # Per-ghost-type scaling of the single parameter
+        # (keeps one free parameter overall)
         self._type_scale = {
-            "scared": 1.0,       # strongest tendency to move away from Pacman
-            "afraid": 0.6,       # moderate tendency
-            "confused": 0.2      # close to random
+            "scared": 1.0,  # strongest tendency to move away from Pacman
+            "afraid": 0.6,  # moderate tendency
+            "confused": 0.2,  # close to random
         }
 
     # -------------------------
@@ -63,9 +64,12 @@ class BeliefStateAgent(Agent):
                     yield (x, y)
 
     def _neighbors(self, pos):
-        """Return non-wall 4-neighbors of pos within bounds (ghosts can move backward)."""
+        """Return non-wall 4-neighbors of pos within bounds.
+
+        Ghosts can move backward.
+        """
         x, y = pos
-        cand = [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]
+        cand = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
         res = []
         width, height = self.walls.width, self.walls.height
         for nx, ny in cand:
@@ -117,10 +121,11 @@ class BeliefStateAgent(Agent):
         W, H = self.walls.width, self.walls.height
         S = np.zeros((W, H), dtype=float)
 
-        # For each possible ghost location x=(w,h), compute the likelihood of observing `evidence`:
-        # Evidence model: E = d(X, Pacman) + (K - n*p), with K ~ Binomial(n, p), p=0.5
-        # => P(E=e | X=x) = P(K = e - d(x) + n*p) if that integer lies in [0, n], else 0.
-        for (w, h) in self._iter_positions():
+        # For each possible ghost (w, h), compute likelihood of evidence.
+        # Evidence model: E = d(X, Pacman) + (K - n*p).
+        # K follows Binomial(n, p).
+        # P(E=e | X=x) = P(K = e - d(x) + n*p) if integer in [0, n], else 0.
+        for w, h in self._iter_positions():
             d = util.manhattanDistance((w, h), pacman_position)
             # evidence is typically an integer; keep robust to float rounding
             k_star = evidence - d + self.n * self.p
@@ -152,31 +157,33 @@ class BeliefStateAgent(Agent):
         W, H = self.walls.width, self.walls.height
         T = np.zeros((W, H, W, H), dtype=float)
 
-        # Effective bias strength for the selected ghost type (single free parameter overall)
+        # Effective bias strength for the selected ghost type
+        # (single free parameter overall)
         scale = self._type_scale.get(self.ghost_type, 0.6)
         beta = np.clip(self.bias_strength * scale, 0.0, 1.0)
 
-        for (x, y) in self._iter_positions():
+        for x, y in self._iter_positions():
             nbrs = self._neighbors((x, y))
 
-            # Compute how desirable each neighbor is: we favor moves that INCREASE distance to Pacman.
+            # Compute desirability; favor moves that increase distance.
             d_curr = util.manhattanDistance((x, y), pacman_position)
             desirabilities = []
-            for (nx, ny) in nbrs:
+            for nx, ny in nbrs:
                 d_next = util.manhattanDistance((nx, ny), pacman_position)
-                desirabilities.append(d_next - d_curr)  # positive => moving away
+                # Positive value means moving away from Pacman.
+                desirabilities.append(d_next - d_curr)
 
             desirabilities = np.array(desirabilities, dtype=float)
 
-            # Soft preference: assign probability mass beta to the neighbors that maximize "moving away"
-            # and spread the remaining (1-beta) uniformly across all legal neighbors.
+            # Soft preference: put beta mass on neighbors maximizing distance.
+            # Spread remaining (1 - beta) uniformly across all legal neighbors.
             if desirabilities.size == 0:
                 # Isolated cell (shouldn't happen), self-loop
                 T[x, y, x, y] = 1.0
                 continue
 
             max_gain = desirabilities.max()
-            prefer_mask = (desirabilities == max_gain)
+            prefer_mask = desirabilities == max_gain
             n_pref = prefer_mask.sum()
             n_all = len(nbrs)
 
@@ -184,18 +191,23 @@ class BeliefStateAgent(Agent):
                 # No improvement possible -> all uniform
                 probs = np.ones(n_all, dtype=float) / n_all
             else:
-                # Put beta mass on preferred neighbors, uniformly; rest uniformly on all
+                # Put beta mass on preferred neighbors; rest uniformly on all
                 probs = np.full(n_all, (1.0 - beta) / n_all, dtype=float)
                 probs[prefer_mask] += beta / n_pref
 
             # Fill T for transitions from (x,y) to each neighbor
-            for (prob, (nx, ny)) in zip(probs, nbrs):
+            for prob, (nx, ny) in zip(probs, nbrs):
                 T[nx, ny, x, y] += prob
 
         return T
 
-    def _get_updated_belief(self, belief, evidences, pacman_position,
-            ghosts_eaten):
+    def _get_updated_belief(
+        self,
+        belief,
+        evidences,
+        pacman_position,
+        ghosts_eaten,
+    ):
         """
         Given a list of (noised) distances from pacman to ghosts,
         and the previous belief states before receiving the evidences,
@@ -234,7 +246,9 @@ class BeliefStateAgent(Agent):
         W, H = self.walls.width, self.walls.height
         walls_mask = self._walls_numpy()
 
-        for z, (b_prev, evi, eaten) in enumerate(zip(belief, evidences, ghosts_eaten)):
+        for z, (b_prev, evi, eaten) in enumerate(
+            zip(belief, evidences, ghosts_eaten)
+        ):
             if eaten:
                 new_beliefs.append(np.zeros_like(b_prev))
                 continue
@@ -290,8 +304,12 @@ class BeliefStateAgent(Agent):
         XXX: DO NOT MODIFY THIS FUNCTION !!!
         Doing so will result in a 0 grade.
         """
-        belief = self._get_updated_belief(self.beliefGhostStates, evidences,
-                                          pacman_position, ghosts_eaten)
+        belief = self._get_updated_belief(
+            self.beliefGhostStates,
+            evidences,
+            pacman_position,
+            ghosts_eaten,
+        )
         self.beliefGhostStates = belief
         return belief
 
@@ -320,7 +338,7 @@ class BeliefStateAgent(Agent):
 
         for pos in positions:
             true_distance = util.manhattanDistance(pos, pacman_position)
-            noise = binom.rvs(self.n, self.p) - self.n*self.p
+            noise = binom.rvs(self.n, self.p) - self.n * self.p
             noisy_distances.append(true_distance + noise)
 
         return noisy_distances
@@ -370,9 +388,11 @@ class BeliefStateAgent(Agent):
             self.walls = state.getWalls()
 
         evidence = self._get_evidence(state)
-        newBeliefStates = self.update_belief_state(evidence,
-                                                   state.getPacmanPosition(),
-                                                   state.data._eaten[1:])
+        newBeliefStates = self.update_belief_state(
+            evidence,
+            state.getPacmanPosition(),
+            state.data._eaten[1:],
+        )
         self._record_metrics(self.beliefGhostStates, state)
 
         return newBeliefStates, evidence

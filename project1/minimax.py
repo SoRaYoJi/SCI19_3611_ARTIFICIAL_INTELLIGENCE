@@ -3,6 +3,7 @@
 from pacman_module.game import Agent, Directions
 from pacman_module.pacman import GameState
 
+
 def simple_eval(state: GameState) -> float:
     """ประเมินสถานะเกมด้วยคะแนนของ Pacman ตรง ๆ"""
     return state.getScore()
@@ -51,14 +52,17 @@ class PacmanAgent(Agent):
             # ถ้าไม่มีแอ็กชัน ก็ประเมินสถานะปัจจุบัน
             return simple_eval(state)
 
-        is_pacman = (agent_id == 0)
+        is_pacman = agent_id == 0
 
         if is_pacman:
             # ชั้น max
             value = float("-inf")
             for act in legal:
                 nxt = state.generateSuccessor(agent_id, act)
-                value = max(value, self._minimax(nxt, ply, (agent_id + 1) % num_agents))
+                value = max(
+                    value,
+                    self._minimax(nxt, ply, (agent_id + 1) % num_agents),
+                )
             return value
         else:
             # ชั้น min (ghost)

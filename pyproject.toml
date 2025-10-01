@@ -1,0 +1,20 @@
+[tool.ruff]
+line-length = 79
+target-version = "py39"         # or py310/py311 if you like
+[tool.ruff.lint]
+extend-select = [
+  "E",  # pycodestyle errors
+  "W",  # pycodestyle warnings
+  "F",  # pyflakes
+  "I",  # import sorting
+]
+# If you prefer Black's 88 cols, set line-length = 88 and add: ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+[tool.pydocstyle]
+convention = "pep257"
+add-ignore = ["D105","D107"]    # ignore missing docstrings on magic/ __init__ if you want

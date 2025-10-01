@@ -1,11 +1,16 @@
 import importlib
 import os
-from argparse import ArgumentParser, ArgumentTypeError
 import random
-from pacman_module.pacman import runGame
-from pacman_module.ghostAgents import\
-    ConfusedGhost, AfraidGhost, ScaredGhost
+from argparse import ArgumentParser, ArgumentTypeError
+
 import numpy as np
+
+from pacman_module.ghostAgents import (
+    ConfusedGhost,
+    AfraidGhost,
+    ScaredGhost,
+)
+from pacman_module.pacman import runGame
 
 
 def proba_float(x):
@@ -89,8 +94,12 @@ if __name__ == '__main__':
         default=None)
     parser.add_argument(
         '--oraclebsagentfile',
-        help='Python file containing a `BeliefStateAgent` class to which bsagentfile will be compared.',
-        default=None)
+        help=(
+            'Python file containing a `BeliefStateAgent` class to which '
+            'bsagentfile will be compared.'
+        ),
+        default=None,
+    )
     parser.add_argument(
         '--edibleghosts',
         help='Whether the ghost can be eaten.',
@@ -127,18 +136,26 @@ if __name__ == '__main__':
     layout = args.layout
     bsagt = None
     oraclebsagt = None
-    startingIndex = 0
+    starting_index = 0
     if args.bsagentfile is not None:
         bsagt = load_agent_from_file(
             args.bsagentfile, "BeliefStateAgent")(args)
-        startingIndex = nghosts+1
+        starting_index = nghosts + 1
     if args.oraclebsagentfile is not None:
         oraclebsagt = load_agent_from_file(
             args.oraclebsagentfile, "BeliefStateAgent")(args)
     total_score, total_computation_time, _ = runGame(
-        layout, agent, gagts, bsagt, not args.silentdisplay, expout=0,
-        hiddenGhosts=args.hiddenghosts, edibleGhosts=args.edibleghosts,
-        startingIndex=startingIndex, oracleBeliefStateAgent=oraclebsagt)
+        layout,
+        agent,
+        gagts,
+        bsagt,
+        not args.silentdisplay,
+        expout=0,
+        hiddenGhosts=args.hiddenghosts,
+        edibleGhosts=args.edibleghosts,
+        startingIndex=starting_index,
+        oracleBeliefStateAgent=oraclebsagt,
+    )
 
     print("Total score : " + str(total_score))
     print("Total computation time (seconds) : " + str(total_computation_time))

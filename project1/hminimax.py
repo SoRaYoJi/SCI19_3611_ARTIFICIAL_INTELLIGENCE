@@ -1,6 +1,5 @@
 from pacman_module.game import Agent
 from pacman_module.pacman import GameState
-from pacman_module.util import manhattanDistance
 
 
 def default_eval(state: GameState):
@@ -61,7 +60,7 @@ class PacmanAgent(Agent):
             return self.eval_fn(state), None
 
         worst_val, worst_move = float("inf"), None
-        last_ghost = (agent_id == state.getNumAgents() - 1)
+        last_ghost = agent_id == state.getNumAgents() - 1
 
         for act in state.getLegalActions(agent_id):
             nxt = state.generateSuccessor(agent_id, act)
@@ -69,7 +68,13 @@ class PacmanAgent(Agent):
             if last_ghost:
                 score, _ = self._maximize(nxt, depth + 1, 0, alpha, beta)
             else:
-                score, _ = self._minimize(nxt, depth, agent_id + 1, alpha, beta)
+                score, _ = self._minimize(
+                    nxt,
+                    depth,
+                    agent_id + 1,
+                    alpha,
+                    beta,
+                )
 
             if score < worst_val:
                 worst_val, worst_move = score, act

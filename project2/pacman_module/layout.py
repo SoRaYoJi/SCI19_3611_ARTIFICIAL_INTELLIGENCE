@@ -5,7 +5,8 @@
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
 #
-# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# Attribution Information: The Pacman AI projects were developed at
+# UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # Student side autograding was added by Brad Miller, Nick Hay, and
@@ -65,8 +66,10 @@ class Layout:
                         for vec, direction in zip(vecs, dirs):
                             dx, dy = vec
                             nextx, nexty = x + dx, y + dy
-                            while (nextx + nexty) != int(nextx) + \
-                                    int(nexty) or not self.walls[int(nextx)][int(nexty)]:
+                            while (
+                                (nextx + nexty) != int(nextx) + int(nexty)
+                                or not self.walls[int(nextx)][int(nexty)]
+                            ):
                                 vis[x][y][direction].add((nextx, nexty))
                                 nextx, nexty = x + dx, y + dy
             self.visibility = vis
@@ -80,22 +83,23 @@ class Layout:
         return self.walls[x][col]
 
     def getRandomLegalPosition(self):
-        x = random.choice(list(range(1,self.width)))
-        y = random.choice(list(range(1,self.height)))
+        x = random.choice(list(range(1, self.width)))
+        y = random.choice(list(range(1, self.height)))
         while self.isWall((x, y)):
-            x = random.choice(list(range(1,self.width)))
-            y = random.choice(list(range(1,self.height)))
-        #print(x,y)
+            x = random.choice(list(range(1, self.width)))
+            y = random.choice(list(range(1, self.height)))
+        # print(x,y)
         return (x, y)
 
-    def getPacmanPosition(self): return self.pacPos
+    def getPacmanPosition(self):
+        return self.pacPos
 
     def getRandomLegalGhostPosition(self):
-        x = random.choice(list(range(self.width-1)))
-        y = random.choice(list(range(self.height-1)))
-        while self.isWall((x, y)) or (x,y) == self.pacPos:
-            x = random.choice(list(range(self.width-1)))
-            y = random.choice(list(range(self.height-1)))
+        x = random.choice(list(range(self.width - 1)))
+        y = random.choice(list(range(self.height - 1)))
+        while self.isWall((x, y)) or (x, y) == self.pacPos:
+            x = random.choice(list(range(self.width - 1)))
+            y = random.choice(list(range(self.height - 1)))
         return (x, y)
 
     def getRandomCorner(self):
@@ -121,10 +125,11 @@ class Layout:
 
     def processLayoutText(self, layoutText):
         """
-        Coordinates are flipped from the input format to the (x,y) convention here
+        Coordinates are flipped from the input format to the (x, y)
+        convention here.
 
-        The shape of the maze.  Each character
-        represents a different type of object.
+        The shape of the maze. Each character represents a different type of
+        object.
          % - Wall
          . - Food
          o - Capsule
@@ -138,7 +143,7 @@ class Layout:
                 layoutChar = layoutText[maxY - y][x]
                 self.processLayoutChar(x, y, layoutChar)
         self.agentPositions.sort()
-        #self.agentPositions = [(i, pos) for i, pos in self.agentPositions]
+        # self.agentPositions = [(i, pos) for i, pos in self.agentPositions]
 
     def processLayoutChar(self, x, y, layoutChar):
         if layoutChar == '%':
@@ -149,7 +154,7 @@ class Layout:
             self.capsules.append((x, y))
         elif layoutChar == 'P':
             self.agentPositions.append((0, (x, y)))
-            self.pacPos = (x,y)
+            self.pacPos = (x, y)
         elif layoutChar in ['G']:
             self.agentPositions.append((1, (x, y)))
             self.numGhosts += 1
@@ -176,7 +181,7 @@ def getLayout(name, back=2):
 
 
 def tryToLoad(fullname):
-    if(not os.path.exists(fullname)):
+    if not os.path.exists(fullname):
         return None
     f = open(fullname)
     try:

@@ -5,7 +5,8 @@
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
 #
-# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# Attribution Information: The Pacman AI projects were developed at
+# UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # Student side autograding was added by Brad Miller, Nick Hay, and
@@ -65,12 +66,12 @@ class GameState:
     A GameState specifies the full game state, including the food, capsules,
     agent configurations and score changes.
 
-    GameStates are used by the Game object to capture the actual state of the game and
-    can be used by agents to reason about the game.
+    GameStates are used by the Game object to capture the actual state of the
+    game and can be used by agents to reason about the game.
 
-    Much of the information in a GameState is stored in a GameStateData object.  We
-    strongly suggest that you access that data via the accessor methods below rather
-    than referring to the GameStateData object directly.
+    Much of the information in a GameState is stored in a GameStateData
+    object. We strongly suggest that you access that data via the accessor
+    methods below rather than referring to the GameStateData object directly.
 
     Note that in classic Pacman, Pacman is always agent 0.
     """
@@ -113,9 +114,7 @@ class GameState:
             return GhostRules.getLegalActions(self, agentIndex)
 
     def isLegalAction(self, agentIndex=0, action=Directions.STOP):
-        """
-        Returns True if 'action' is in the legal actions of the agent specified.
-        """
+        """Return True if `action` is among the agent's legal moves."""
 #        GameState.explored.add(self)
         if self.isWin() or self.isLose():
             return False
@@ -155,7 +154,8 @@ class GameState:
 
         # Time passes
         if agentIndex == 0:
-            state.data.scoreChange += -TIME_PENALTY  # Penalty for waiting around
+            # Penalty for waiting around.
+            state.data.scoreChange += -TIME_PENALTY
         else:
             GhostRules.decrementTimer(state.data.agentStates[agentIndex])
 
@@ -179,26 +179,30 @@ class GameState:
         return self.generateSuccessor(0, action)
 
     def generatePacmanSuccessors(self):
-        """
-        Returns a list of pairs of successor states and moves given the current state s for the pacman agent.
-        """
+        """Return successor states and moves for the Pacman agent."""
         if (GameState.countExpanded >= GameState.maximumExpanded):
             return None
         GameState.countExpanded += 1
-        return [(self.generateSuccessor(0, action), action)
-                for action in self.getLegalPacmanActions() if action != Directions.STOP]
+        successors = []
+        for action in self.getLegalPacmanActions():
+            if action == Directions.STOP:
+                continue
+            successors.append((self.generateSuccessor(0, action), action))
+        return successors
 
     def generateGhostSuccessors(self, index):
-        """
-         Returns a list of pairs of successor states and moves given the current state s for the ghost agent (>0).
-        """
+        """Return successor states and moves for ghost agents (>0)."""
 
-        if (GameState.countExpanded >= GameState.maximumExpanded or index == 0):
+        if GameState.countExpanded >= GameState.maximumExpanded or index == 0:
             return None
         GameState.countExpanded += 1
 
-        return [(self.generateSuccessor(index, action), action)
-                for action in self.getLegalActions(index) if action != Directions.STOP]
+        successors = []
+        for action in self.getLegalActions(index):
+            if action == Directions.STOP:
+                continue
+            successors.append((self.generateSuccessor(index, action), action))
+        return successors
 
     def getPacmanState(self):
         """
@@ -485,8 +489,8 @@ class PacmanRules:
 
         # Update Configuration
         vector = Actions.directionToVector(action, PacmanRules.PACMAN_SPEED)
-        pacmanState.configuration = pacmanState.configuration.generateSuccessor(
-            vector)
+        new_config = pacmanState.configuration.generateSuccessor(vector)
+        pacmanState.configuration = new_config
 
         # Eat
         next = pacmanState.configuration.getPosition()
@@ -510,7 +514,7 @@ class PacmanRules:
                 state.data.scoreChange += 500
                 state.data._win = True
         # Eat capsule
-        if(position in state.getCapsules()):
+        if position in state.getCapsules():
             state.data.scoreChange -= 5
             state.data.capsules.remove(position)
             state.data._capsuleEaten = position
@@ -538,8 +542,11 @@ class GhostRules:
         if Directions.STOP in possibleActions and "beliefStates" not in dir(
                 state.data):
             possibleActions.remove(Directions.STOP)
-        if "beliefStates" not in dir(
-                state.data) and reverse in possibleActions and len(possibleActions) > 1:
+        if (
+            "beliefStates" not in dir(state.data)
+            and reverse in possibleActions
+            and len(possibleActions) > 1
+        ):
             possibleActions.remove(reverse)
 
         return possibleActions
@@ -559,8 +566,11 @@ class GhostRules:
         reverse = Actions.reverseDirection(conf.direction)
         if Directions.STOP in possibleActions:
             possibleActions.remove(Directions.STOP)
-        if "beliefStates" not in dir(
-                state.data) and reverse in possibleActions and len(possibleActions) > 1:
+        if (
+            "beliefStates" not in dir(state.data)
+            and reverse in possibleActions
+            and len(possibleActions) > 1
+        ):
             possibleActions.remove(reverse)
 
         return possibleActions
@@ -575,7 +585,10 @@ class GhostRules:
 
         ghostState = state.data.agentStates[ghostIndex]
         speed = GhostRules.GHOST_SPEED
-        if ghostState.scaredTimer > 0 and "beliefStates" not in dir(state.data):
+        if (
+            ghostState.scaredTimer > 0
+            and "beliefStates" not in dir(state.data)
+        ):
             speed /= 2.0
         vector = Actions.directionToVector(action, speed)
         ghostState.configuration = ghostState.configuration.generateSuccessor(
@@ -752,8 +765,12 @@ def readCommand(argv):
         '--recordActions',
         action='store_true',
         dest='record',
-        help='Writes game histories to a file (named by the time they were played)',
-        default=False)
+        help=(
+            'Writes game histories to a file '
+            '(named by the time they were played)'
+        ),
+        default=False,
+    )
     parser.add_option(
         '--replay',
         dest='gameToReplay',
@@ -763,7 +780,11 @@ def readCommand(argv):
         '-a',
         '--agentArgs',
         dest='agentArgs',
-        help='Comma separated values sent to agent. e.g. "opt1=val1,opt2,opt3=val3"')
+        help=(
+            'Comma separated values sent to agent. '
+            'e.g. "opt1=val1,opt2,opt3=val3"'
+        ),
+    )
     parser.add_option(
         '-x',
         '--numTraining',
@@ -788,7 +809,10 @@ def readCommand(argv):
         '--timeout',
         dest='timeout',
         type='int',
-        help=default('Maximum length of time an agent can spend computing in a single game'),
+        help=default(
+            'Maximum time an agent can spend computing '
+            'in a single game'
+        ),
         default=30)
 
     options, otherjunk = parser.parse_args(argv)
@@ -882,7 +906,9 @@ def loadAgent(pacman, nographics):
             if pacman in dir(module):
                 if nographics and modulename == 'keyboardAgents.py':
                     raise Exception(
-                        'Using the keyboard requires graphics (not text display)')
+                        'Using the keyboard requires graphics '
+                        '(not text display)'
+                    )
                 return getattr(module, pacman)
     raise Exception(
         'The agent ' +
@@ -894,14 +920,17 @@ def replayGame(layout, actions, display):
     import pacmanAgents
     import ghostAgents
     rules = ClassicGameRules()
-    agents = [pacmanAgents.GreedyAgent()] + [ghostAgents.RandomGhost(i + 1)
-                                             for i in range(layout.getNumGhosts())]
+    agents = [pacmanAgents.GreedyAgent()]
+    agents += [
+        ghostAgents.RandomGhost(i + 1)
+        for i in range(layout.getNumGhosts())
+    ]
     game = rules.newGame(layout, agents[0], agents[1:], display)
     state = game.state
     display.initialize(state.data)
 
     for action in actions:
-            # Execute the action
+        # Execute the action
         state = state.generateSuccessor(*action)
         # Change the display
         display.update(state.data)
@@ -930,7 +959,7 @@ def runGames(
     for i in range(numGames):
         beQuiet = i < numTraining
         if beQuiet:
-                # Suppress output and graphics
+            # Suppress output and graphics
             from . import textDisplay
             gameDisplay = textDisplay.NullGraphics()
             rules.quiet = True

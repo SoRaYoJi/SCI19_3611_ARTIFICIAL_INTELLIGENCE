@@ -3,6 +3,7 @@
 
 import heapq
 from itertools import count
+
 from pacman_module.game import Agent
 from pacman_module.pacman import Directions
 
@@ -14,7 +15,11 @@ def key(state):
     - ตารางอาหาร (Grid)
     - รายการแคปซูล (tuple)
     """
-    return (state.getPacmanPosition(), state.getFood(), tuple(state.getCapsules()))
+    return (
+        state.getPacmanPosition(),
+        state.getFood(),
+        tuple(state.getCapsules()),
+    )
 
 
 def manhattan(p, q):
@@ -89,7 +94,10 @@ class PacmanAgent(Agent):
 
         # คิวเก็บทูเพิล: (f, tie, g, state, path)
         pq = []
-        heapq.heappush(pq, (heuristic(start_state), next(self._tie), 0, start_state, []))
+        heapq.heappush(
+            pq,
+            (heuristic(start_state), next(self._tie), 0, start_state, []),
+        )
         closed = set()
 
         while pq:
@@ -108,7 +116,10 @@ class PacmanAgent(Agent):
                 if nxt_k not in g_best or g2 < g_best[nxt_k]:
                     g_best[nxt_k] = g2
                     h2 = heuristic(nxt)
-                    heapq.heappush(pq, (g2 + h2, next(self._tie), g2, nxt, path + [act]))
+                    heapq.heappush(
+                        pq,
+                        (g2 + h2, next(self._tie), g2, nxt, path + [act]),
+                    )
 
         # ไม่พบทาง
         return []

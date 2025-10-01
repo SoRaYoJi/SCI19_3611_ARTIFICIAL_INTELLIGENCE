@@ -2,6 +2,7 @@
 # Breadth-First Search agent for Pacman (PEP-8 compliant)
 
 from collections import deque
+
 from pacman_module.game import Agent
 from pacman_module.pacman import Directions
 
@@ -13,7 +14,11 @@ def key(state):
     - ตารางอาหาร (Grid)
     - รายการแคปซูล (tuple)
     """
-    return (state.getPacmanPosition(), state.getFood(), tuple(state.getCapsules()))
+    return (
+        state.getPacmanPosition(),
+        state.getFood(),
+        tuple(state.getCapsules()),
+    )
 
 
 class PacmanAgent(Agent):

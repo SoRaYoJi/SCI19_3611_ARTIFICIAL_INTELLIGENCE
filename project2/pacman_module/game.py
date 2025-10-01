@@ -5,7 +5,8 @@
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
 #
-# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# Attribution Information: The Pacman AI projects were developed at
+# UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # Student side autograding was added by Brad Miller, Nick Hay, and
@@ -16,18 +17,22 @@
 # -------
 # Licensing Information: Please do not distribute or publish solutions to this
 # project. You are free to use and extend these projects for educational
-# purposes. The Pacman AI projects were developed at UC Berkeley, primarily by
-# John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
+# purposes. The Pacman AI projects were developed at UC Berkeley,
+# primarily by John DeNero (denero@cs.berkeley.edu) and Dan Klein
+# (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
-from .util import *
-import time
 import os
-import traceback
 import sys
-import pacman_module as pacmodule
-import numpy as np
+import time
+import traceback
 from copy import deepcopy
+
+import numpy as np
+
+import pacman_module as pacmodule
+
+from .util import *
 
 #######################
 # Parts worth reading #
@@ -46,15 +51,15 @@ class Agent:
         self.index = index
 
     def get_action(self, state):
-        """
-        The Agent will receive a GameState (from either {pacman, capture, sonar}.py) and
-        must return an action from Directions.{North, South, East, West, Stop}
+        """Return an action from Directions.{North, South, East, West, Stop}.
+
+        The Agent receives a GameState from {pacman, capture, sonar}.py.
         """
         raiseNotDefined()
 
     def register_initial_state(self, state):
         """
-        The Agent will receive a GameState (from either {pacman, capture, sonar}.py) and
+        The Agent receives a GameState from {pacman, capture, sonar}.py and
         must return an action from Directions.{North, South, East, West, Stop}
         """
         raiseNotDefined()
@@ -83,12 +88,10 @@ class Directions:
 
 
 class Configuration:
-    """
-    A Configuration holds the (x,y) coordinate of a character, along with its
-    traveling direction.
+    """Container for coordinate and traveling direction.
 
-    The convention for positions, like a graph, is that (0,0) is the lower left corner, x increases
-    horizontally and y increases vertically.  Therefore, north is the direction of increasing y, or (0,1).
+    Positions use (0, 0) at lower left; x increases horizontally, y
+    increases vertically. North is the direction of increasing y (0, 1).
     """
 
     def __init__(self, pos, direction, visible=True):
@@ -163,7 +166,9 @@ class AgentState:
     def __eq__(self, other):
         if other is None:
             return False
-        return self.configuration == other.configuration and self.scaredTimer == other.scaredTimer
+        same_config = self.configuration == other.configuration
+        same_timer = self.scaredTimer == other.scaredTimer
+        return same_config and same_timer
 
     def __hash__(self):
         return hash(hash(self.configuration) + 13 * hash(self.scaredTimer))
@@ -189,12 +194,11 @@ class AgentState:
 
 
 class Grid:
-    """
-    A 2-dimensional array of objects backed by a list of lists.  Data is accessed
-    via grid[x][y] where (x,y) are positions on a Pacman map with x horizontal,
-    y vertical and the origin (0,0) in the bottom left corner.
+    """2D array of objects backed by a list of lists.
 
-    The __str__ method constructs an output that is oriented like a pacman board.
+    Data is accessed via grid[x][y] where (x, y) are Pacman map positions
+    with x horizontal, y vertical, origin (0, 0) bottom left. The __str__
+    method prints an output oriented like a Pacman board.
     """
 
     def __init__(
@@ -235,9 +239,9 @@ class Grid:
         # return hash(str(self))
         base = 1
         h = 0
-        for l in self.data:
-            for i in l:
-                if i:
+        for row in self.data:
+            for cell in row:
+                if cell:
                     h += base
                 base *= 2
         return hash(h)
@@ -423,9 +427,7 @@ class GameStateData:
     """
 
     def __init__(self, prevState=None):
-        """
-        Generates a new data packet by copying information from its predecessor.
-        """
+        """Copy information from the predecessor to build a new data packet."""
         if prevState is not None:
             self.food = prevState.food.shallowCopy()
             self.capsules = prevState.capsules[:]
@@ -575,7 +577,7 @@ class GameStateData:
         """
 
         self.food = layout.food.copy()
-        #self.capsules = []
+        # self.capsules = []
         self.capsules = layout.capsules[:]
         self.layout = layout
         self.score = 0
@@ -598,34 +600,37 @@ class GameStateData:
                 Configuration(
                     pos,
                     Directions.STOP,
-                    visible=isGhostVisible if not isPacman else True),
-                agtType)
+                    visible=(isGhostVisible if not isPacman else True),
+                ),
+                agtType,
+            )
             if edibleGhosts:
                 agt.scaredTimer = float("inf")
             self.agentStates.append(agt)
         self._eaten = [False for a in self.agentStates]
         if beliefStateAgent is not None:
-            """
-            Create a uniform prior on the belief state
-            """
-            uniformBelief = np.full((self.layout.width,
-                                     self.layout.height),
-                                    1.0 / (self.layout.width * self.layout.height))
-            
+            """Create a uniform prior on the belief state."""
+            uniform_belief = np.full(
+                (self.layout.width, self.layout.height),
+                1.0 / (self.layout.width * self.layout.height),
+            )
+
             for x in range(self.layout.width):
                 for y in range(self.layout.height):
                     if self.layout.walls[x][y]:
-                        uniformBelief[x][y] = 0.
-                        
-            uniformBelief = uniformBelief/np.sum(uniformBelief)
+                        uniform_belief[x][y] = 0.
+            uniform_belief = uniform_belief / np.sum(uniform_belief)
 
-            agtState = AgentState(
+            agt_state = AgentState(
                 Configuration(
                     -1,
-                             (-1, -1), False),
-                -1)
-            self.agentStates.append(agtState)
-            self.beliefStates = [np.copy(uniformBelief)
+                    (-1, -1),
+                    False,
+                ),
+                -1,
+            )
+            self.agentStates.append(agt_state)
+            self.beliefStates = [np.copy(uniform_belief)
                                  for _ in range(numGhosts)]
 
 
@@ -730,14 +735,27 @@ class Game:
             violated = False
             t = time.time()
             if expout == 0:
-                if (agentIndex == 0 and type(self.agents[numAgents-1]).__name__ == "BeliefStateAgent"):
+                last_agent = self.agents[numAgents - 1]
+                is_belief_agent = (
+                    type(last_agent).__name__ == "BeliefStateAgent"
+                )
+                if agentIndex == 0 and is_belief_agent:
                     action = agent.get_action(observation, previous_action)
-                elif (agentIndex == numAgents-1 and type(self.agents[numAgents-1]).__name__ == "BeliefStateAgent"):
+                elif agentIndex == numAgents - 1 and is_belief_agent:
                     action, evidence = agent.get_action(observation)
                     if self.oracleBeliefStateAgent is not None:
-                        oracleAction = self.oracleBeliefStateAgent.get_action(observation, evidence)
+                        oracleAction = self.oracleBeliefStateAgent.get_action(
+                            observation,
+                            evidence,
+                        )
 
-                        if len(action) == len(oracleAction) and np.array([(np.absolute(x - y) < 10**(-4)).all() for x,y in zip(action, oracleAction)]).all():
+                        arrays_close = [
+                            (np.absolute(x - y) < 10 ** (-4)).all()
+                            for x, y in zip(action, oracleAction)
+                        ]
+                        same_length = len(action) == len(oracleAction)
+                        arrays_match = np.array(arrays_close).all()
+                        if same_length and arrays_match:
                             print("step {}: OK".format(self.numMoves))
                         else:
                             print("step {}: Not OK".format(self.numMoves))
@@ -767,8 +785,8 @@ class Game:
 
             # Change the display
             self.display.update(self.state.data)
-            ###idx = agentIndex - agentIndex % 2 + 1
-            ###self.display.update( self.state.makeObservation(idx).data )
+            # idx = agentIndex - agentIndex % 2 + 1
+            # self.display.update(self.state.makeObservation(idx).data)
 
             # Allow for game specific conditions (winning, losing, etc.)
             self.rules.process(self.state, self)

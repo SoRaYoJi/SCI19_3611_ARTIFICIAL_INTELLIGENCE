@@ -1,11 +1,11 @@
 # Complete this class for all parts of the project
 
+from pacman_module import util
 from pacman_module.game import Agent
 from pacman_module.pacman import Directions
-from pacman_module import util
 
-# Some environments expose Actions.directionToVector; we avoid that dependency by
-# querying next position via state.generatePacmanSuccessor(action).
+# Some environments expose Actions.directionToVector.
+# Query next position via state.generatePacmanSuccessor(action).
 
 
 class PacmanAgent(Agent):
@@ -66,26 +66,34 @@ class PacmanAgent(Agent):
             return Directions.STOP
 
         # Prefer non-STOP actions if possible
-        candidate_actions = [a for a in legal if a != Directions.STOP] or [Directions.STOP]
+        candidate_actions = [a for a in legal if a != Directions.STOP] or [
+            Directions.STOP
+        ]
 
         # Evaluate expected distance if we take each action
         best = None
         best_score = None
 
         # Tie-break order (consistent, gentle bias)
-        pref_order = [Directions.NORTH, Directions.EAST, Directions.SOUTH, Directions.WEST, Directions.STOP]
+        pref_order = [
+            Directions.NORTH,
+            Directions.EAST,
+            Directions.SOUTH,
+            Directions.WEST,
+            Directions.STOP,
+        ]
 
         for a in candidate_actions:
             # Generate successor to know Pacman's next position under action a
             succ = state.generatePacmanSuccessor(a)
             if succ is None:
-                # If the engine returns None (some frameworks do at terminal states), skip
+                # Some frameworks return None at terminal states; skip.
                 continue
             pac_next = succ.getPacmanPosition()
 
             score = self._expected_distance(pac_next, belief_state)
 
-            # Small tie-break: prefer continuing the same direction, then by pref_order
+            # Tie-break: prefer continuing direction, then `pref_order`.
             tie_bias = 0.0
             if a == self._last_action:
                 tie_bias -= 1e-6

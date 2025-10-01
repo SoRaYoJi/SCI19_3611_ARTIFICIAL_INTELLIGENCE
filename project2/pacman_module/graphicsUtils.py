@@ -5,7 +5,8 @@
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
 #
-# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# Attribution Information: The Pacman AI projects were developed at
+# UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # Student side autograding was added by Brad Miller, Nick Hay, and
@@ -68,7 +69,8 @@ def begin_graphics(
             0),
         title=None):
 
-    global _root_window, _canvas, _canvas_x, _canvas_y, _canvas_xs, _canvas_ys, _bg_color
+    global _root_window, _canvas, _canvas_x, _canvas_y
+    global _canvas_xs, _canvas_ys, _bg_color
 
     # Check for duplicate call
     if _root_window is not None:
@@ -328,7 +330,7 @@ def line(here, there, color=formatColor(0, 0, 0), width=2):
     return _canvas.create_line(x0, y0, x1, y1, fill=color, width=width)
 
 ##############################################################################
-### Keypress handling ########################################################
+# Keypress handling ##########################################################
 ##############################################################################
 
 # We bind to key-down and key-up events.

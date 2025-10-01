@@ -1,7 +1,8 @@
+import random
 
 from pacman_module.game import Agent
 from pacman_module.pacman import Directions
-import random
+
 
 class PacmanAgent(Agent):
     def __init__(self, args):
@@ -30,8 +31,8 @@ class PacmanAgent(Agent):
         legal_moves = state.getLegalPacmanActions()
         if Directions.STOP in legal_moves:
             legal_moves.remove(Directions.STOP)
-        
+
         if not legal_moves:
             return Directions.STOP
-            
+
         return random.choice(legal_moves)
