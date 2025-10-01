@@ -73,7 +73,8 @@ if __name__ == '__main__':
         ghosts=[GHOSTS[args.ghost](1)],
         beliefstateagent=None,
         displayGraphics=not args.nographics,
-        expout=0.0,
+        
+        expout=100000,
         hiddenGhosts=False,
     )
 

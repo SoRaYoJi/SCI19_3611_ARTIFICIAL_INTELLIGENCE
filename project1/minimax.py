@@ -1,82 +1,63 @@
-# minimax.py
-
-from pacman_module.game import Agent, Directions
+from pacman_module.game import Agent
 from pacman_module.pacman import GameState
 
 
-def simple_eval(state: GameState) -> float:
-    """ประเมินสถานะเกมด้วยคะแนนของ Pacman ตรง ๆ"""
-    return state.getScore()
-
-
 class PacmanAgent(Agent):
-    """Pacman ที่ตัดสินใจด้วย Depth-limited Minimax"""
-
-    def __init__(self, depth: str = "2"):
+    def __init__(self):
         super().__init__()
-        self.max_depth = int(depth)
+        self.depth = 3
 
-    # ---------- public API ----------
-    def get_action(self, state: GameState):
+    def get_action(self, game_state: GameState):
         """
-        เลือกแอ็กชันที่ให้ค่าสูงสุดจากราก (ตา Pacman)
+        Returns the minimax action from the current game_state.
         """
-        best_move = Directions.STOP
-        best_val = float("-inf")
+        memo = {}
+        best_action, _ = self.minimax(game_state, 0, 0, memo)
+        return best_action
 
-        legal = state.getLegalActions(0)
-        if not legal:
-            return best_move
+    def minimax(self, game_state, depth, agent_index, memo):
+        state_key = (game_state, depth, agent_index)
+        if state_key in memo:
+            return memo[state_key]
+        if (game_state.isWin() or game_state.isLose() or
+                depth == self.depth * game_state.getNumAgents()):
+            return None, game_state.getScore()
 
-        for act in legal:
-            nxt = state.generateSuccessor(0, act)
-            val = self._minimax(nxt, ply=0, agent_id=1)  # ต่อด้วยตาผีตัวแรก
-            if val > best_val:
-                best_val, best_move = val, act
+        num_agents = game_state.getNumAgents()
+        next_agent_index = (agent_index + 1) % num_agents
+        next_depth = depth + 1
 
-        return best_move
+        if agent_index == 0:  # Pacman's turn
+            successors = game_state.generatePacmanSuccessors()
+        else:  # Ghost's turn
+            successors = game_state.generateGhostSuccessors(agent_index)
 
-    # ---------- core search ----------
-    def _minimax(self, state: GameState, ply: int, agent_id: int) -> float:
-        """
-        โหนดทั่วไป: สลับระหว่าง Pacman (max) และ Ghosts (min)
-        - ply นับเป็นความลึกของ 'รอบ' (ครบทุกตัว 1 ครั้ง = เพิ่ม 1)
-        - agent_id = 0 คือ Pacman, 1..N-1 คือ Ghosts
-        """
-        if self._cutoff(state, ply):
-            return simple_eval(state)
+        if not successors:
+            return None, game_state.getScore()
 
-        num_agents = state.getNumAgents()
-        legal = state.getLegalActions(agent_id)
-        if not legal:
-            # ถ้าไม่มีแอ็กชัน ก็ประเมินสถานะปัจจุบัน
-            return simple_eval(state)
+        scores = []
+        for successor_state, action in successors:
+            _, score = self.minimax(
+                successor_state, next_depth, next_agent_index, memo)
+            scores.append(score)
 
-        is_pacman = agent_id == 0
-
-        if is_pacman:
-            # ชั้น max
-            value = float("-inf")
-            for act in legal:
-                nxt = state.generateSuccessor(agent_id, act)
-                value = max(
-                    value,
-                    self._minimax(nxt, ply, (agent_id + 1) % num_agents),
-                )
-            return value
-        else:
-            # ชั้น min (ghost)
-            value = float("inf")
-            next_agent = (agent_id + 1) % num_agents
-            # ถ้าถึงรอบของ Pacman อีกครั้ง ให้เพิ่ม ply (ลึกขึ้นอีก 1)
-            next_ply = ply + 1 if next_agent == 0 else ply
-
-            for act in legal:
-                nxt = state.generateSuccessor(agent_id, act)
-                value = min(value, self._minimax(nxt, next_ply, next_agent))
-            return value
-
-    # ---------- helpers ----------
-    def _cutoff(self, state: GameState, ply: int) -> bool:
-        """หยุดค้นเมื่อชนะ/แพ้ หรือถึงความลึกที่กำหนด"""
-        return state.isWin() or state.isLose() or ply >= self.max_depth
+        if agent_index == 0:  # Pacman (Maximizer)
+            best_score = max(scores)
+            best_indices = [
+                index for index, score in enumerate(scores)
+                if score == best_score
+            ]
+            chosen_index = best_indices[0]
+            result = successors[chosen_index][1], best_score
+            memo[state_key] = result
+            return result
+        else:  # Ghost (Minimizer)
+            best_score = min(scores)
+            best_indices = [
+                index for index, score in enumerate(scores)
+                if score == best_score
+            ]
+            chosen_index = best_indices[0]
+            result = successors[chosen_index][1], best_score
+            memo[state_key] = result
+            return result
